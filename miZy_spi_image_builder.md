@@ -69,14 +69,14 @@ Now under active development, but is usable already )
 
 # write image into device
 
-in FEL mode via sunxi-fel tools
+in FEL mode via sunxi-fel tools 
 
 check spi flash size
 
     ./tools/fel_spi_info
     Manufacturer: Winbond (EFh), model: 40h, size: 16777216 bytes.
 
-ok! write image - u can write any image size <= flash size
+ok! write image ( possible write any image size <= flash size )
 
     ./tools/fel_spi_write firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
 
