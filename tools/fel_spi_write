@@ -1,0 +1,20 @@
+#!/bin/sh
+
+## hyphop ##
+
+about() { echo "
+EXAMPLE
+    $0 bin/image8m.bin
+    100% [================================================]  8389 kB,   82.2 kB/s 
+
+NOTE
+    slow
+
+";}
+
+[ -f "$1" ] || { about; exit 0 ;}
+ 
+f=$(readlink $0); [ "$f" = "" ] && f=$0
+$(dirname $f)/sunxi-fel -p spiflash-write 0 $1
+
+

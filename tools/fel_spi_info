@@ -1,0 +1,11 @@
+#!/bin/sh
+
+## hyphop ##
+
+f=$(readlink $0); [ "$f" = "" ] && f=$0
+$(dirname $f)/sunxi-fel spiflash-info
+
+# winbond 
+#./spi_info
+#Manufacturer: Unknown (6Fh), model: 40h, size: 256 bytes.
+#Manufacturer: Winbond (EFh), model: 40h, size: 16777216 bytes.

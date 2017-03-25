@@ -1,0 +1,29 @@
+#!/bin/sh
+
+## hyphop ##
+
+onflash=/tmp/fel_spi_dump.bin
+
+about() { echo "
+EXAMPLE
+    $0 bin/image8m.bin
+
+FILES
+    $onflash
+
+";}
+
+
+[ -f "$1" ] || { about; exit 0 ;}
+ 
+f=$(readlink $0); [ "$f" = "" ] && f=$0
+
+echo "compare $1 and $onflash dump image from device"
+$(dirname $f)/sunxi-fel -p spiflash-read 0 `stat -L -c %s $1` $onflash
+
+md5sum $onflash
+md5sum $1
+
+diff $onflash $1 && echo "ok"
+
+
