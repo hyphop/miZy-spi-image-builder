@@ -1,0 +1,340 @@
+#!/usr/bin/perl
+
+## hyphop ##
+
+=head1 ABOUT miZy_spi_image_builder
+
+SPI-flash firmware image builder (for sunxi Orange Pi Zero, another sunxi boards maybe work too )
+
+Its just a part or miZy project, and same as other our parts can standalone used
+
+This perl script no need any libs or another deps
+
+=head1 USAGE
+
+help
+
+    ./miZy_spi_image_builder --help
+
+common usage for 8M image, output to out/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
+
+    ./miZy_spi_image_builder
+
+custom config
+
+    ./miZy_spi_image_builder miZy-spi_image_builder_custom.conf
+
+set 16M image size
+
+    img_size=16M ./miZy_spi_image_builder
+
+not padded by flash size, save only used space
+
+    img_size=0 ./miZy_spi_image_builder
+
+override image out name
+
+    img_name=out/my_image_name%s.bin ./miZy_spi_image_builder
+
+=head1 CONFIG FILE
+
+default config
+
+    miZy-spi_image_builder.conf
+
+config file its a same pure perl code!
+
+=head1 PATHS
+    
+put your files (uboot scripts env fex/dtc kernel squashfs initramfs userdata) in @SCAN_PATH dirs
+by default are
+
+    .
+    ./bin
+    ./bin.local
+
+=head1 miZy
+
+tiny fast embedded linux, for sunxi Orange Pi Zero (and maybe other boards) and mods
+under active development, but is usable already )
+
+=head1 LINKS
+
+=over
+
+=item *
+L<https://github.com/hyphop/miZy_spi_image_builder>
+
+=item *
+L<https://hyphop.github.io/mizy/>
+
+=item *
+L<https://github.com/hyphop/miZy-uboot>
+
+=item *
+L<https://github.com/hyphop/miZy-linux-kernel>
+
+=back
+
+=cut
+
+our ( @SCAN_PATH, @IMG, $block_size, $img_size, $img_name,
+    $script_padded_size );
+
+BEGIN {
+
+    ## developer part code 
+    if ( ( join "" => @ARGV ) =~ /--md/ ) { 
+    `perldoc -o Markdown "$0" > "$0.md"`; exit 0 }
+    if ( ( join " " => @ARGV ) =~ /(--push\s*)/ ) {
+	my $msg=$'; $msg||=localtime();
+	`$0 --md; git add -A && git commit -m "$msg" && git push`;
+	exit 0;
+    }
+
+    ## real code start there
+    exec perldoc => $0 if ( join "" => @ARGV ) =~ /-{1,2}h(elp)?/;
+
+    our $CONF      = shift;
+    our $PROG      = $0;
+    our $PROG_NAME = $0;
+    $PROG_NAME =~ s{(.+/)}{}sg;
+    our $PROG_DIR = $1;
+    $CONF ||= "$PROG.conf";
+    warn "[i] $PROG_DIR $PROG_NAME => CONF: $CONF\n";
+
+    #    my $CONF_OK = eval { require $CONF };
+    do $CONF;
+    $CONF_OK = 1;
+
+    unless ($CONF_OK) {
+        warn "[e] bad config $CONF\n";
+        exit 1;
+    }
+
+}
+
+# use only for check
+# use common::sense;
+
+our $WARN = "";
+our $ERR  = 0;
+
+sub WARN {
+
+    #syswrite STDERR, join "" => @_;
+    $WARN .= join "" => @_;
+}
+
+END {
+    syswrite STDERR, $WARN;
+    syswrite STDERR, "ERR: $ERR\n" if $ERR;
+    exit $ERR;
+}
+
+$SIG{'__WARN__'} = \&WARN;
+
+sub getfile {
+    my $f;
+    my $r;
+    my $data;
+    $r = open $f, $_[0];
+    return undef unless $r;
+    my $l = -s $_[0];
+    $r = sysread $f, $data, $l;
+    warn "[i] readed $r($l) bytes from $_[0]\n";
+    return $data;
+}
+
+sub savefile {
+    my $f;
+    my $r = open $f, ">$_[1]";
+    return undef unless $r;
+    my $l = length $_[0];
+    $r = syswrite $f, $_[0], $l;
+    warn "[i] save $_[1] $l bytes\n";
+    return $r;
+}
+
+sub pad {
+
+    #$_[0], $_[1], $_[2];
+    my $l = length $_[0];
+    my $s = $_[1];
+    my $c = $_[2];
+    $c ||= "\x00";
+    my $p = $s - $l;
+    warn "[i] pad $l + $p => $s\n";
+    $_[0] . ${c} x $p
+
+}
+
+our %FILES = ();
+
+sub scan_file {
+    return $FILES{ $_[0] } if defined $FILES{ $_[0] };
+    local $_;
+    for (@SCAN_PATH) {
+        my $e = -f "$_/$_[0]";
+        if ($e) {
+            return $FILES{ $_[0] } = "$_/$_[0]";
+            break;
+        }
+    }
+    return undef;
+}
+
+sub cat {
+    my $s = "";
+    $s .= getfile( scan_file $_ ) for @_;
+
+    #    $s .= getfile($_) for @_;
+    return $s;
+}
+
+$block_size //= 65536;
+
+our $img;
+our $out;
+
+printf STDERR "[i] %s bytes => %s\n" => $img_size => $img_name;
+printf STDERR "[i] %12s 0x%08s(%9s){%8s} %s\n" =>
+  qw/MTD_PART HEX_SIZE DEC_SIZE USED_SZ FILES/;
+
+our $img_size_bytes = tobytes($img_size);
+if ( $img_size_bytes % $block_size ) {
+    $ERR = 5
+      and die
+      "[e] image size $img_size_bytes not div by $block_size block size\n";
+
+}
+
+for my $part (@IMG) {
+
+    my $part_name = shift @$part;
+    my $part_size = shift @$part;
+
+    #$part
+
+    my $files = join " " => @$part;
+    my $used_size = 0;
+
+    for my $file (@$part) {
+
+        my $filepath = scan_file($file);
+
+        unless ( -f $filepath ) {
+            $ERR = 1 and die "[e] file \"$filepath\" not found\n";
+        }
+
+        $used_size += -s $filepath;
+
+    }
+
+    if ($part_size) {
+
+        if ( $part_size % $block_size ) {
+            $ERR = 2
+              and die
+              "[e] part $part_size size not div by $block_size block size\n";
+        }
+        if ( $used_size > $part_size ) {
+            $ERR = 3
+              and die
+"[e] part $part_name $part_size < $used_size needed for $files, try fix config\n";
+        }
+
+    }
+    else {
+        $part_size = int( $used_size / $block_size ) * $block_size;
+        $part_size ||= $block_size;
+    }
+
+    if ( $part_name eq "script" ) {
+        $out .= pad(
+            pad(
+                    mkimage_header()
+                  . cat( shift @$part ) => $script_padded_size => "\x00"
+              )
+              . cat(@$part),
+            $part_size => "\x00"
+        );
+    }
+    else {
+        $out .= pad cat(@$part) => $part_size => "\xFF";
+    }
+
+    printf STDOUT "[i] %12s 0x%08X(%9s){%8s} $files\n" => $part_name,
+      $part_size, $part_size, $used_size, $files;
+
+}
+
+sub kilo {
+    int( $_[0] / 1024 );
+}
+
+sub tobytes {
+    return $1 * 1024 * 1024 if $_[0] =~ /(\d+)M/;
+    return $1 * 1024 if $_[0] =~ /(\d+)K/;
+}
+
+sub mkimage_header {
+
+    # uboot script mkimake header
+    join /\s+/ => qw/
+      27051956515b32295891963900000fc000000000000000009cfe4d7c0502060000000000
+      0000000000000000000000000000000000000000000000000000000000000fb800000000
+      /;
+}
+
+our $out_size = length $out;
+
+unless ($img_size_bytes) {
+    warn "[i] write $img_size_bytes not padder by flash size\n";
+}
+else {
+    if ( $out_size > $img_size_bytes ) {
+        $ERR = 3
+          and die "[e] out size $out_size > $img_size ($img_size_bytes) \n";
+    }
+    else {
+        $out = pad( $out => $img_size_bytes );
+    }
+}
+
+$img = sprintf $img_name, $img_size;
+
+savefile( $out => $img );
+
+__END__
+
+=head1 EXAMPLE image building output log
+
+    [i] ./ miZy_spi_image_builder => CONF: ./miZy_spi_image_builder.conf
+    [i] 8M bytes => orange_pi_zero_hyphop_mizy_spi_flash_demo-%s.bin
+    [i]     MTD_PART 0xHEX_SIZE( DEC_SIZE){ USED_SZ} FILES
+    [i]        uboot 0x00080000(   524288){  463470} u-boot-mizi.bin
+    [i]       script 0x00010000(    65536){    5371} boot.all.cmd boot.all.env boot.spi.env
+    [i]          dtb 0x00010000(    65536){   34364} orangepizero.bin
+    [i]       kernel 0x00300000(  3145728){ 3083834} uImage.lzma
+    [i]       initrd 0x00420000(  4325376){ 2170944} uinitrd.sfs
+    [i]         user 0x00010000(    65536){       0} 
+    [i] readed 463470(463470) bytes from bin.local/u-boot-mizi.bin
+    [i] pad 463470 + 60818 => 524288
+    [i] readed 2998(2998) bytes from bin.local/boot.all.cmd
+    [i] pad 3142 + 954 => 4096
+    [i] readed 2011(2011) bytes from bin.local/boot.all.env
+    [i] readed 362(362) bytes from bin.local/boot.spi.env
+    [i] pad 6469 + 59067 => 65536
+    [i] readed 34364(34364) bytes from bin.local/orangepizero.bin
+    [i] pad 34364 + 31172 => 65536
+    [i] readed 3083834(3083834) bytes from bin.local/uImage.lzma
+    [i] pad 3083834 + 61894 => 3145728
+    [i] readed 2170944(2170944) bytes from bin.local/uinitrd.sfs
+    [i] pad 2170944 + 2154432 => 4325376
+    [i] pad 0 + 65536 => 65536
+    [i] pad 8192000 + 196608 => 8388608
+    [i] save orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin 8388608 bytes
+
+=cut
+

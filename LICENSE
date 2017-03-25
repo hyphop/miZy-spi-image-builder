@@ -1,6 +1,17 @@
+## ATTENTION
+
+    ## hyphop ## - this mark is just short alias (everywhere in source code and
+    another files, this mark must stay in same place ), for following document
+
+## AUTHOR & ALIASES
+
+Artem Lapkin aka ART NIKPAL aka HYPHOP
+
+## LICENSE
+
 MIT License
 
-Copyright (c) 2017 Art Nikpal
+Copyright (c) 2017 Artem Lapkin
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +30,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
