@@ -51,8 +51,8 @@ by default are
 
 # miZy
 
-tiny fast embedded linux, for sunxi Orange Pi Zero (and maybe other boards) and mods
-under active development, but is usable already )
+tiny fast embedded linux, for sunxi Orange Pi Zero (and maybe other boards) and mods.
+Now under active development, but is usable already )
 
 # LINKS
 
