@@ -36,6 +36,11 @@ override image out name
 
     img_name=out/my_image_name%s.bin ./miZy_spi_image_builder
 
+check build status in shell 
+
+    ./miZy_spi_image_builder && echo "build ok"
+    ./miZy_spi_image_builder || echo "build fail"
+
 =head1 CONFIG FILE
 
 default config
@@ -121,9 +126,13 @@ our $WARN = "";
 our $ERR  = 0;
 
 sub WARN {
-
     #syswrite STDERR, join "" => @_;
     $WARN .= join "" => @_;
+}
+
+sub DIE {
+    $ERR = shift;
+    warn @_;
 }
 
 END {
@@ -202,12 +211,9 @@ printf STDERR "[i] %12s 0x%08s(%9s){%8s} %s\n" =>
   qw/MTD_PART HEX_SIZE DEC_SIZE USED_SZ FILES/;
 
 our $img_size_bytes = tobytes($img_size);
-if ( $img_size_bytes % $block_size ) {
-    $ERR = 5
-      and die
-      "[e] image size $img_size_bytes not div by $block_size block size\n";
 
-}
+DIE 1 => "[e] image size $img_size_bytes not div by $block_size block size\n"
+    if $img_size_bytes % $block_size;
 
 for my $part (@IMG) {
 
@@ -224,7 +230,7 @@ for my $part (@IMG) {
         my $filepath = scan_file($file);
 
         unless ( -f $filepath ) {
-            $ERR = 1 and die "[e] file \"$filepath\" not found\n";
+            DIE 2 =>  "[e] file \"$filepath\" not found\n";
         }
 
         $used_size += -s $filepath;
@@ -233,16 +239,12 @@ for my $part (@IMG) {
 
     if ($part_size) {
 
-        if ( $part_size % $block_size ) {
-            $ERR = 2
-              and die
-              "[e] part $part_size size not div by $block_size block size\n";
-        }
-        if ( $used_size > $part_size ) {
-            $ERR = 3
-              and die
-"[e] part $part_name $part_size < $used_size needed for $files, try fix config\n";
-        }
+	DIE 3 => "[e] part $part_size size not div by $block_size block size\n"
+        if $part_size % $block_size;
+
+	DIE 4 => "[e] part $part_name $part_size < $used_size".
+		 " needed for $files, try fix config\n"
+        if $used_size > $part_size;
 
     }
     else {
@@ -294,8 +296,8 @@ unless ($img_size_bytes) {
 }
 else {
     if ( $out_size > $img_size_bytes ) {
-        $ERR = 3
-          and die "[e] out size $out_size > $img_size ($img_size_bytes) \n";
+        DIE 5 =>
+          "[e] out size $out_size > $img_size ($img_size_bytes)\n";
     }
     else {
         $out = pad( $out => $img_size_bytes );
@@ -304,7 +306,7 @@ else {
 
 $img = sprintf $img_name, $img_size;
 
-savefile( $out => $img );
+savefile( $out => $img ) or DIE 6 => "[e] write error $img\n";
 
 __END__
 

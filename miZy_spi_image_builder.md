@@ -32,6 +32,11 @@ override image out name
 
     img_name=out/my_image_name%s.bin ./miZy_spi_image_builder
 
+check build status in shell 
+
+    ./miZy_spi_image_builder && echo "build ok"
+    ./miZy_spi_image_builder || echo "build fail"
+
 # CONFIG FILE
 
 default config
