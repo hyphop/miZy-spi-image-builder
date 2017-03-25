@@ -2,17 +2,9 @@
 
 SPI-flash firmware image builder (for sunxi Orange Pi Zero, another sunxi boards maybe work too )
 
-Its just a part or miZy project, and same as other our parts can used standalone.
+Its just a part or miZy project, and same as other our parts can standalone used
 
-This perl script no need any libs or another deps.
-
-# GET, PREPARE & INSTALL
-
-    cd /tmp
-    mkdir zero_builder
-    git clone https://github.com/hyphop/miZy-spi-image-builder
-    cd miZy-spi-image-builder
-    ./miZy_spi_image_builder --help
+This perl script no need any libs or another deps
 
 # USAGE
 
@@ -20,13 +12,13 @@ help
 
     ./miZy_spi_image_builder --help
 
-common usage build 8M image and save to out/orange\_pi\_zero\_hyphop\_mizy\_spi\_flash\_demo-8M.bin
+common usage for 8M image, output to out/orange\_pi\_zero\_hyphop\_mizy\_spi\_flash\_demo-8M.bin
 
     ./miZy_spi_image_builder
 
 custom config
 
-    ./miZy_spi_image_builder miZy_spi_image_builder_custom.conf
+    ./miZy_spi_image_builder miZy-spi_image_builder_custom.conf
 
 set 16M image size
 
@@ -49,7 +41,7 @@ check build status in shell
 
 default config
 
-    miZy_spi_image_builder.conf
+    miZy-spi_image_builder.conf
 
 config file its a same pure perl code!
 
@@ -69,20 +61,20 @@ Now under active development, but is usable already )
 
 # write image into device
 
-in FEL mode via sunxi-fel tools 
+in FEL mode via sunxi-fel tools
 
 check spi flash size
 
     ./tools/fel_spi_info
     Manufacturer: Winbond (EFh), model: 40h, size: 16777216 bytes.
 
-ok! write image ( possible write any image size <= flash size )
+ok! write image - u can write any image size <= flash size
 
     ./tools/fel_spi_write firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
 
 # LINKS
 
-- [https://github.com/hyphop/miZy-spi-image-builder](https://github.com/hyphop/miZy-spi-image-builder)
+- [https://github.com/hyphop/miZy\_spi\_image\_builder](https://github.com/hyphop/miZy_spi_image_builder)
 - [https://hyphop.github.io/mizy/](https://hyphop.github.io/mizy/)
 - [https://github.com/hyphop/miZy-uboot](https://github.com/hyphop/miZy-uboot)
 - [https://github.com/hyphop/miZy-linux-kernel](https://github.com/hyphop/miZy-linux-kernel)
