@@ -149,6 +149,7 @@ sub WARN {
 sub DIE {
     $ERR = shift;
     warn @_;
+    die
 }
 
 END {
