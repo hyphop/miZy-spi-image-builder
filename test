@@ -1,0 +1,35 @@
+#!/bin/sh
+
+## hyphop ##
+
+## test for miZy_spi_image_builder and miZy_mmc_add_partitions 
+
+img_name=/tmp/mizy_mmc_image.bin
+log=/tmp/miZy_spi_image_builder.log
+nbd=/dev/nbd5
+mnt=$img_name.mnt
+fstype=ext2
+fstype=vfat
+
+MMC=1 img_name=$img_name  ./miZy_spi_image_builder 2>&1 | tee $log
+
+fstype=$fstype ./miZy_mmc_add_partitions $img_name 8x8 $log
+
+qemu-nbd -c $nbd $img_name
+
+[ -d $mnt ] || mkdir $mnt
+
+mount ${nbd}p1 $mnt
+
+fdisk -l ${nbd}
+
+blkid | grep miZy
+
+ls -l1 $mnt
+
+umount ${nbd}p1
+
+qemu-nbd -d $nbd 
+
+rmdir $mnt
+

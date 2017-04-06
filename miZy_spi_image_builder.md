@@ -37,11 +37,12 @@ check build status in shell
     ./miZy_spi_image_builder && echo "build ok"
     ./miZy_spi_image_builder || echo "build fail"
 
-# generate hybrid image 
+# Hybrid image 
 
-by default generate hybrid image, this image can used for both SPI and SD/MMC 
-we can write this image to SD/MMC for test correct work on device , and next
-copy this image to SPI from booted SD/MMC, or just write this image direct to SPI
+by default miZy\_spi\_image\_builder generate hybrid image its simple raw image,
+which can used for SPI and same for SD/MMC. this image equal spi-flash rom and
+ready for direct write to SPI flash, but we can write this image to SD/MMC
+for test work on device, and next copy this image to SPI from booted SD/MMC, 
 
 write hybrid image to SD/MMC
 
@@ -49,7 +50,15 @@ write hybrid image to SD/MMC
 
 write hybrid image direct to SPI ( /dev/mtdblock5 - full size spi-flash mtd block dev)
 
-    dd bs=65536 of=/dev/mtdblock5 < firmwares/mizy_spi_flash_demo-8M.bin
+    dd bs=65536 of=/dev/mtdblock5 < /tmp/mizy_spi_flash_demo-8M.bin
+
+write hybrid image direct to SPI via mtd
+
+    mtd write /tmp/mizy_spi_flash_demo-8M.bin full
+
+write hybrid image to SPI via sunxi-tooll FEL mode from host machine
+
+    sunxi-fel -p spiflash-write 0 firmwares/mizy_spi_flash_demo-8M.bin
 
 # generate MMC image 
 

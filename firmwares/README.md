@@ -2,28 +2,28 @@
 
 firmware images output there in ../firmwares/
 
-== HOST/DEVICE image SD/MMC write
+== HOST/DEVICE mmc image SD/MMC write
 
     dd of=/dev/mmcblk0 < orange_pi_zero_hyphop_mizy_spi_flash_demo-8M+8192-mmc.bin
 
-== HOST mkfs for iamge
+== HOST mkfs & image partition
 
 make loop     
 
     losetup --show -f -o 8388608 orange_pi_zero_hyphop_mizy_spi_flash_demo-8M+8192-mmc.bin
     >/dev/loop3
 
-makefs on loop
+make fs on loop
 
     mkfs.vfat /dev/loop3
 
 mount loop
 
-    mount /dev/loop3
+    mount /dev/loop3 mnt_point
 
 == HOST mount image partition
 
-    mount -o offset=8388608 orange_pi_zero_hyphop_mizy_spi_flash_demo-8M+8192-mmc.bin mmc_part_1
+    mount -o offset=8388608 orange_pi_zero_hyphop_mizy_spi_flash_demo-8M+8192-mmc.bin mnt_point
 
 == DEVICE check boot source 
 

@@ -7,13 +7,16 @@
 sub USAGE() { warn qq{
 output raw mmc image
 
-    MMC=1 img_name=firmwares/mizy_mmc_image.bin ./miZy_spi_image_builder 
+    MMC=1 img_name=firmwares/mizy_mmc_image.bin  ./miZy_spi_image_builder 2>&1 | \
+	tee /tmp/miZy_spi_image_builder.log
 
 add one partiotion and write some readme info there
 
-    ./miZy_mmc_add_partitions firmwares/mizy_mmc_image.bin 8x8
+    ./miZy_mmc_add_partitions firmwares/mizy_mmc_image.bin 8x8 /tmp/miZy_spi_image_builder.log
 
 NOTE
+
+fdisk 
 
     fdisk mizy_mmc_image.bin -l
 
@@ -27,10 +30,20 @@ NOTE
              Device Boot      Start         End      Blocks   Id  System
     mizy_mmc_image.bin1           16384       32767        8192   83  Linux
 
+usage image as nbd device
+
+    qemu-nbd -c /dev/nbd0 mizy_mmc_image.bin
 
     blkid | grep miZy
-
     /dev/nbd0p1: SEC_TYPE="msdos" LABEL="miZy_Info" UUID="FEED-DEED" TYPE="vfat"
+
+    fdisk -l /dev/nbd0
+    ....
+
+    mount /dev/nbd0p1 mount_point_mmc_part_1
+    umount /dev/nbd0p1 
+
+    qemu-nbd -d /dev/nbd0 
 
 };
 exit 0;
@@ -39,6 +52,10 @@ exit 0;
 
 USAGE if ( join "" => @ARGV ) =~ /-{1,2}h(elp)?/;
 
+our $fstype = $ENV{fstype};
+    $fstype //= 'vfat';
+    $fstype //= 'ext2';
+our $mkfs = "mkfs.$fstype";
 
 our $mizy_disk_id = "edfeedde"; # not change
 
@@ -125,9 +142,28 @@ our $tmp_dir = "/tmp/$vol_name.$$";
 
 mkdir $tmp_dir;
 
-`mkfs.vfat -n $vol_name -i $vol_id $loop_dev`;
+our $args="";
+
+$args = "-n $vol_name -i $vol_id"	if $fstype eq 'vfat';
+$args = "-L $vol_name -U " .  sprintf("%s-%04x-%04x-%04x-%012x",
+     $vol_id, 1,2,3,time ) 		if $fstype =~ m/ext/;
+
+warn "[i] mkfs args $args\n";
+
+`$mkfs $args $loop_dev`;
 `mount $loop_dev $tmp_dir`;
 `cat ./README.md > $tmp_dir/README.md`;
+`cat ./LICENSE > $tmp_dir/LICENSE`;
+`ln -s LICENSE '$tmp_dir/## hyphop ##' || cp '## hyphop ##' $tmp_dir`;
+
+while ( $_ = shift @ARGV ) {
+    if ( -f $_ ) {
+	m{.+/};
+	warn "[i] add $_ to $tmp_dir/$'\n";
+	`cp "$_" "$tmp_dir/$'"`;
+    }
+}
+
 `umount $loop_dev`;
 `losetup -d $loop_dev`;
 
