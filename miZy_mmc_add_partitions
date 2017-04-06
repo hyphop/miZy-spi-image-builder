@@ -1,0 +1,146 @@
+#!/usr/bin/perl
+
+#https://en.wikipedia.org/wiki/Master_boot_record#Sector_layout
+#https://en.wikipedia.org/wiki/Master_boot_record#PTE
+
+
+sub USAGE() { warn qq{
+output raw mmc image
+
+    MMC=1 img_name=firmwares/mizy_mmc_image.bin ./miZy_spi_image_builder 
+
+add one partiotion and write some readme info there
+
+    ./miZy_mmc_add_partitions firmwares/mizy_mmc_image.bin 8x8
+
+NOTE
+
+    fdisk mizy_mmc_image.bin -l
+
+    Disk mizy_mmc_image.bin: 16 MB, 16777216 bytes
+    2 heads, 8 sectors/track, 2048 cylinders, total 32768 sectors
+    Units = sectors of 1 * 512 = 512 bytes
+    Sector size (logical/physical): 512 bytes / 512 bytes
+    I/O size (minimum/optimal): 512 bytes / 512 bytes
+    Disk identifier: 0xdeedfeed
+
+             Device Boot      Start         End      Blocks   Id  System
+    mizy_mmc_image.bin1           16384       32767        8192   83  Linux
+
+
+    blkid | grep miZy
+
+    /dev/nbd0p1: SEC_TYPE="msdos" LABEL="miZy_Info" UUID="FEED-DEED" TYPE="vfat"
+
+};
+exit 0;
+};
+
+
+USAGE if ( join "" => @ARGV ) =~ /-{1,2}h(elp)?/;
+
+
+our $mizy_disk_id = "edfeedde"; # not change
+
+our $part_end = join "" => qw/
+00000000000000000000000000000000
+00000000000000000000000000000000
+00000000000000000000000000000000
+55aa
+/;
+
+our %mbr = (
+
+#~ 'def' => [
+#~ "\x00"x440 . 
+#~ pack "H*" => join "" => $mizy_disk_id => qw/
+#~ 0000
+#~ 00050501832524010040000000080000
+#~ 00000000000000000000000000000000
+#~ 00000000000000000000000000000000
+#~ 00000000000000000000000000000000
+#~ 55aa 
+#~ / ]
+
+# mbr + first part 8M offset + 8M size
+'8x8' => [ 16384, 16384,
+"\x00"x440 . 
+pack "H*" => join "" => $mizy_disk_id => qw/
+0000
+00 00 11 3e 83 01 08 7c 00 40  00 00 00 40 00 00
+/  => $part_end
+]
+
+);
+
+#	  / 83h -linux / 0Ch - fat32 / 0Eh - fat16
+#__======PT------........++++++++
+#00050501832524010040000000080000
+#		 |       '--------- Number of sectors in partition
+#                 \_ LBA of first absolute sector in the partition
+#         
+
+#0x1000000 = 16777216
+#16777216 / 512 = 32768
+
+our $fname;
+our $out_name = "+<" . ($fname = shift)
+    if -f $ARGV[0];
+
+    $out_name //= ">&STDOUT";
+
+our $fsize  = defined $fname ?  -s $fname : 0;
+
+open OUT, $out_name;
+our $pos = sysseek OUT, 0, 0;
+
+
+our $part_name = shift;
+our $part_names = join " " => sort keys %mbr;
+
+die "[e] undef part name: $part_name ( $part_names )\n"
+    unless defined $mbr{ $part_name };
+
+my $w = syswrite OUT, $mbr{$part_name}->[2];
+warn "[i] write $w bytes to $pos pos in $out_name ($fsize bytes)\n";
+
+#$pos = sysseek OUT, 0, 2;
+our $part_offset=512*$mbr{$part_name}->[0];
+our $part_size=512*$mbr{$part_name}->[1];
+
+$pos = sysseek OUT, $part_offset , 0;
+
+my $w = syswrite OUT, "\x00"x$part_size;
+
+close OUT;
+
+warn "[i] write $w to $pos pos in $out_name\n";
+our $vol_name = "miZy_Info"; # not change
+our $vol_id = "feeddeed"; # not change
+
+$loop_dev=`losetup --show -f -o $part_offset $fname`;
+chomp $loop_dev;
+warn "[i] loop dev '$loop_dev'\n";
+our $tmp_dir = "/tmp/$vol_name.$$";
+
+mkdir $tmp_dir;
+
+`mkfs.vfat -n $vol_name -i $vol_id $loop_dev`;
+`mount $loop_dev $tmp_dir`;
+`cat ./README.md > $tmp_dir/README.md`;
+`umount $loop_dev`;
+`losetup -d $loop_dev`;
+
+exec rmdir => $tmp_dir;
+
+__END__
+
+dd count=1 < /dev/mmcblk0 2>/dev/null | hd
+00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+000001b0  00 00 00 00 00 00 00 00  15 be 63 5c 00 00 00 00  |..........c\....|
+000001c0  11 3e 83 01 08 7c 00 40  00 00 00 40 00 00 00 00  |.>...|.@...@....|
+000001d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+000001f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 55 aa  |..............U.|
+00000200

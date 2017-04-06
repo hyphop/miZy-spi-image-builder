@@ -2,4 +2,4 @@ bin/*
 bin.local/*
 out/*
 firmwares/*.bin
-
+docs
