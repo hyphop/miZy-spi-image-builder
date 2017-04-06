@@ -37,17 +37,17 @@ check build status in shell
     ./miZy_spi_image_builder && echo "build ok"
     ./miZy_spi_image_builder || echo "build fail"
 
-# generate hybryd image 
+# generate hybrid image 
 
-by default generate hybryd image, this image can used for both SPI and SD/MMC 
+by default generate hybrid image, this image can used for both SPI and SD/MMC 
 we can write this image to SD/MMC for test correct work on device , and next
 copy this image to SPI from booted SD/MMC, or just write this image direct to SPI
 
-write hybryd image to SD/MMC
+write hybrid image to SD/MMC
 
     dd seek=16 bs=512 of=/dev/mmcblk0 < firmwares/mizy_spi_flash_demo-8M.bin
 
-write hybryd image direct to SPI ( /dev/mtdblock5 - full size spi-flash mtd block dev)
+write hybrid image direct to SPI ( /dev/mtdblock5 - full size spi-flash mtd block dev)
 
     dd bs=65536 of=/dev/mtdblock5 < firmwares/mizy_spi_flash_demo-8M.bin
 
@@ -70,7 +70,7 @@ write mmc image to SD/MMC
     mmc_copy_to_spi
     mmc_copy_to_spi yes
 
-    ## FOUND mizy hybryd image info:
+    ## FOUND mizy hybrid image info:
     8388608                                                        
     mizy_mmc_image.bin                                             
     miZy_spi_image_builder Thu Apr  6 16:17:17 2017 ## hyphop ##   
