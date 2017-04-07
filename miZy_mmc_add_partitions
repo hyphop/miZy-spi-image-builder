@@ -135,7 +135,7 @@ warn "[i] write $w to $pos pos in $out_name\n";
 our $vol_name = "miZy_Info"; # not change
 our $vol_id = "feeddeed"; # not change
 
-$loop_dev=`losetup --show -f -o $part_offset $fname`;
+our $loop_dev=`losetup --show -f -o $part_offset $fname`;
 chomp $loop_dev;
 warn "[i] loop dev '$loop_dev'\n";
 our $tmp_dir = "/tmp/$vol_name.$$";
