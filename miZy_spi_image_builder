@@ -16,7 +16,7 @@ help
 
     ./miZy_spi_image_builder --help
 
-common usage for 8M image, output to out/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
+common usage for 8M image, output to firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
 
     ./miZy_spi_image_builder
 
