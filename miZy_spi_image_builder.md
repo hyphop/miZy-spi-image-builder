@@ -130,7 +130,7 @@ ok! write image - u can write any image size <= flash size
 
 # LINKS
 
-- [https://github.com/hyphop/miZy\_spi\_image\_builder](https://github.com/hyphop/miZy_spi_image_builder)
+- [https://github.com/hyphop/miZy-spi-image-builder](https://github.com/hyphop/miZy-spi-image-builder)
 - [https://hyphop.github.io/mizy/](https://hyphop.github.io/mizy/)
 - [https://github.com/hyphop/miZy-uboot](https://github.com/hyphop/miZy-uboot)
 - [https://github.com/hyphop/miZy-linux-kernel](https://github.com/hyphop/miZy-linux-kernel)

@@ -137,7 +137,7 @@ ok! write image - u can write any image size <= flash size
 =over
 
 =item *
-L<https://github.com/hyphop/miZy_spi_image_builder>
+L<https://github.com/hyphop/miZy-spi-image-builder>
 
 =item *
 L<https://hyphop.github.io/mizy/>
