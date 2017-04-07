@@ -1,6 +1,6 @@
 # ABOUT miZy\_spi\_image\_builder
 
-SPI-flash firmware image builder (for sunxi Orange Pi Zero, another sunxi boards maybe work too )
+SPI-flash miZy firmware image builder (for sunxi Orange Pi Zero, another sunxi boards maybe work too )
 
 Its just a part or miZy project, and same as other our parts can standalone used
 
