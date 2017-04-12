@@ -169,7 +169,9 @@ BEGIN {
     ## developer part code 
     our $NOW = localtime();
     if ( ( join "" => @ARGV ) =~ /--md/ ) { 
-    `perldoc -o Markdown "$0" > "$0.md"`; exit 0 }
+    `perldoc -o Markdown "$0" > "$0.md"`;
+    `perldoc -o text "$0" > "$0.txt"`;
+     exit 0 }
     if ( ( join " " => @ARGV ) =~ /(--push\s*)/ ) {
 	my $msg=$'; $msg||=$NOW;
 	`$0 --md; git add -A && git commit -m "$msg" && git push`;
