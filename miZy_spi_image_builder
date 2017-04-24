@@ -154,6 +154,7 @@ L<https://github.com/hyphop/miZy-linux-kernel>
 
 our ( @SCAN_PATH, @IMG, $block_size, $img_size, $img_name, $script_padded_size,
     $NOW, $env_spi_generate, %mtd_name_uboot_read_size, @env_spi_mtd_parts,
+    %mtd_name_uboot_read_offset,
     $env_spi_mtd_parts,
     $MMC_BS, $MMC_OFFSET, %mmc_name_uboot_read_size, %mmc_name_uboot_read_offset,
     $spi_image, $mmc_image
@@ -301,6 +302,7 @@ DIE 1 => "[e] image size $img_size_bytes not div by $block_size block size\n"
     if $img_size_bytes % $block_size;
 
 our $mmc = $MMC_OFFSET;
+our $spi = 0;
 
 ## mmc 
 ##
@@ -387,6 +389,9 @@ for my $part (@IMG) {
             if ($s) {
                 $env_spi_content .= sprintf "%s=%d\n",
                   $s->[0] => $s->[1] ? $used_size : $part_size;
+                $env_spi_content .= sprintf "%s=%x\n", 
+		    $mtd_name_uboot_read_offset{$part_name},
+		    $spi
             }
 
             $s = $mmc_name_uboot_read_size{$part_name};
@@ -414,6 +419,7 @@ for my $part (@IMG) {
       $part_size, $part_size, $used_size, $files;
 
     $mmc+=$part_size;
+    $spi+=$part_size;
 
 }
 
