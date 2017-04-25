@@ -2,4 +2,5 @@ bin/*
 bin.local/*
 out/*
 firmwares/*.bin
+git_*
 docs
