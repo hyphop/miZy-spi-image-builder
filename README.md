@@ -37,6 +37,17 @@ check build status in shell
     ./miZy_spi_image_builder && echo "build ok"
     ./miZy_spi_image_builder || echo "build fail"
 
+# write image to SPI from host to working device
+
+easy way for upgrade / rewrite system
+
+    scp firmwares/*.bin root@zeru:/tmp
+    dd bs=65536 of=/dev/mtdblock5 < /tmp/*.bin
+
+    163+1 records in
+    163+1 records out
+    10743872 bytes (10.2MB) copied, 61.941887 seconds, 169.4KB/s
+
 # Hybrid image 
 
 by default miZy\_spi\_image\_builder generate hybrid image its simple raw image,
@@ -70,7 +81,7 @@ add one partiotion and write some readme info there
 
     ./miZy_mmc_add_partitions firmwares/mizy_mmc_image.bin 8x8
 
-write mmc image to SD/MMC
+## write mmc image to SD/MMC
 
     dd of=/dev/mmcblk0 < firmwares/mizy_mmc_image.bin
 

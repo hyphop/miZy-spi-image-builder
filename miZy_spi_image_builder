@@ -41,6 +41,17 @@ check build status in shell
     ./miZy_spi_image_builder && echo "build ok"
     ./miZy_spi_image_builder || echo "build fail"
 
+=head1 write image to SPI from host to working device
+
+easy way for upgrade / rewrite system
+
+    scp firmwares/*.bin root@zeru:/tmp
+    dd bs=65536 of=/dev/mtdblock5 < /tmp/*.bin
+
+    163+1 records in
+    163+1 records out
+    10743872 bytes (10.2MB) copied, 61.941887 seconds, 169.4KB/s
+
 =head1 Hybrid image 
 
 by default miZy_spi_image_builder generate hybrid image its simple raw image,
@@ -74,7 +85,7 @@ add one partiotion and write some readme info there
 
     ./miZy_mmc_add_partitions firmwares/mizy_mmc_image.bin 8x8
 
-write mmc image to SD/MMC
+=head2 write mmc image to SD/MMC
 
     dd of=/dev/mmcblk0 < firmwares/mizy_mmc_image.bin
 
@@ -410,10 +421,11 @@ for my $part (@IMG) {
                 $env_spi_content .= sprintf "%s=%x\n", $s, $mmc / $MMC_BS;
             }
 
-	    push @env_spi_mtd_parts => sprintf "%sk(%s)" => $part_size/1024, $part_name;
 
 	}
     }
+
+    push @env_spi_mtd_parts => sprintf "%sk(%s)" => $part_size/1024, $part_name;
 
     printf STDOUT "[i] %12s 0x%08X(%9s){%8s} $files\n" => $part_name,
       $part_size, $part_size, $used_size, $files;
