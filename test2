@@ -1,0 +1,5 @@
+#!/bin/sh
+
+## hyphop ##
+
+MMC=1 img_size=16M ./miZy_spi_image_builder && scp firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-16M+8192-mmc.bin root@zeru:/tmp

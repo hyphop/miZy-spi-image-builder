@@ -267,6 +267,7 @@ sub pad {
     my $c = $_[2];
     $c ||= "\x00";
     my $p = $s - $l;
+#       $p =~ s/^-//;
     warn "[i] pad $l + $p => $s\n";
     $_[0] . ${c} x $p
 
@@ -346,7 +347,7 @@ for my $part (@IMG) {
 
 	if ( $part_size == 0xFFFFFFF ) {
 	    my $free_size =  $img_size_bytes - $img_used_size;
-	    warn "[i] max size is $free_size\n";
+	    warn "[i] free_size $free_size bytes!\n";
 	     $part_size=$free_size;
 	}
 
@@ -357,11 +358,14 @@ for my $part (@IMG) {
 		 " needed for $files, try fix config\n"
         if $used_size > $part_size;
 
-    }
-    else {
+    } else {
         $part_size = int( $used_size / $block_size ) * $block_size;
-        $part_size ||= $block_size;
+	$part_size+= $block_size if $part_size < $used_size;
+
+	warn "[i] $part_size = int( $used_size / $block_size ) * $block_size;";
     }
+
+    $part_size ||= $block_size;
 
     # 524288 + 8192 = 532480 / 512 = 1040
 
