@@ -1,10 +1,18 @@
 # ABOUT miZy\_spi\_image\_builder
 
 SPI-flash miZy firmware image builder (for sunxi Orange Pi Zero, another sunxi boards maybe work too )
+also Hybrid-image generate for SD card (spi emulate on sd card)
 
 Its just a part or miZy project, and same as other our parts can standalone used
 
 This perl script no need any libs or another deps
+
+# Get Source
+
+    mkdir /tmp/zero_builder
+    cd /tmp/zero_builder
+    git clone https://github.com/hyphop/miZy-spi-image-builder.git
+    cd miZy-spi-image-builder
 
 # USAGE
 

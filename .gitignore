@@ -1,5 +1,5 @@
 bin/*
-bin.local/*
+#bin.local/*
 out/*
 firmwares/*.bin
 git_*

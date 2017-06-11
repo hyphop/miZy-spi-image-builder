@@ -1,0 +1,1 @@
+../../miZy/boot.all.cmd
