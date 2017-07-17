@@ -1,0 +1,24 @@
+#!/bin/sh
+
+## hyphop ##
+
+# generate img
+
+p=`pwd`
+
+cd ../miZy
+
+#./initrd.img.pack initrd.img.base.music_player_h2
+
+cd $p
+
+img_name="firmwares/orange_pi_zero_miZy-music_box-mpd-net-SPI-beta_test.%s"
+
+rm firmwares/*.bin
+
+img_size=8M MMC=1 img_name=$img_name.MMC.hybrid.bin ./miZy_spi_image_builder
+img_size=8M       img_name=$img_name.bin ./miZy_spi_image_builder
+
+img_size=16M MMC=1 img_name=$img_name.MMC.hybrid.bin ./miZy_spi_image_builder
+img_size=16M       img_name=$img_name.bin ./miZy_spi_image_builder
+
