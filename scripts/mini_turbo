@@ -3,13 +3,23 @@
 ## hyphop ##
 
 d=`dirname $0`
+p=`pwd`
 
 echo $d
 
 [ "$d" = "./scripts" ] || {
-	echo "[i] )))))"
+	echo "[i] bad working dir )))))"
 	exit 0
 }
+
+cd ../miZy || exit 0
+
+rm -r ,out/initrd.dir
+
+./initrd.img.pack initrd.img.base.fast
+./boot.fel.make-force
+
+cd $p
 
 rm firmwares/*.bin
 
