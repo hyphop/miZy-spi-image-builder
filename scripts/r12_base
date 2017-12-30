@@ -32,8 +32,9 @@ export config=initrd.img.base.r12
 [ "$comp" ] || comp=xz
 
 	./initrd.img.pack.sfs $comp
-	
-./boot.fel.make-force
+
+# may be no need
+# ./boot.fel.make-force
 
 cd $p
 
