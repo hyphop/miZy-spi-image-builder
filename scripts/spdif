@@ -39,7 +39,9 @@ cd $p
 
 rm firmwares/*.bin
 
-name=orange_pi_zero_spdif
+[ "$board" ] || board=h2
+
+name=orange_pi_zero_${board}_spdif
 name_spi=$name.SPI.%s.bin
 name_mmc=$name.MMC.hybrid.%s.bin
 
