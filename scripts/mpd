@@ -28,16 +28,16 @@ cd ../miZy || exit 0
 cmp=xz ./initrd.img.pack initrd.img.base.music_player
 cd $p
 
-img_size=8M MMC=1 img_name=$d$name_spi ./miZy_spi_image_builder
-img_size=8M       img_name=$d$name_mmc ./miZy_spi_image_builder $conf
+img_size=8M MMC=1 img_name=$d$name_mmc ./miZy_spi_image_builder
+img_size=8M       img_name=$d$name_spi ./miZy_spi_image_builder $conf
 
 
 cd ../miZy || exit 0
 ./initrd.img.pack initrd.img.base.music_player
 cd $p
 
-img_size=16M MMC=1 img_name=$d$name_spi ./miZy_spi_image_builder
-img_size=16M       img_name=$d$name_mmc ./miZy_spi_image_builder $conf
+img_size=16M MMC=1 img_name=$d$name_mmc ./miZy_spi_image_builder
+img_size=16M       img_name=$d$name_spi ./miZy_spi_image_builder $conf
 
 
 for f in $d/*.bin; do

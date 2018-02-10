@@ -532,7 +532,8 @@ if ($mmc_image) {
     ## NOW add partitions
 #dd if=/dev/zero bs=1M count=1 >> orange_pi_zero_hyphop_mizy_spi_flash_demo-8M+8192-mmc.bin
 
-    our $img_mmc_name = sprintf $img_name, "$img_size+$MMC_OFFSET", "-mmc";
+#   our $img_mmc_name = sprintf $img_name, "$img_size+$MMC_OFFSET", "-mmc";
+    our $img_mmc_name = sprintf $img_name, "$img_size.$MMC_OFFSET", "-mmc";
 
     #   our $mmc_boot="\x00" x $MMC_OFFSET;
 
