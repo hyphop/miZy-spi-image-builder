@@ -12,12 +12,14 @@ echo $d
 	exit 0
 }
 
+NAME=pulse
+
 cd ../miZy || exit 0
 
 rm -r ,out/initrd.dir
 
 #cmp=lzo ./initrd.img.pack initrd.img.base.spdif
-export config=initrd.img.base.r1
+export config=initrd.img.base.$NAME
 
 	./initrd.img.pack.dir
 
@@ -28,10 +30,8 @@ export config=initrd.img.base.r1
 ##
 
 [ "$comp" ] || comp=lzo
-[ "$comp" ] || comp=gzip
-[ "$comp" ] || comp=xz
-
-echo "usbnet: $usbnet"
+#[ "$comp" ] || comp=gzip
+#[ "$comp" ] || comp=xz
 
 	./initrd.img.pack.sfs $comp
 	
@@ -41,7 +41,9 @@ cd $p
 
 rm firmwares/*.bin
 
-name=orange_pi_r1_base
+[ "$board" ] || board=h2
+
+name=orange_pi_zero_${board}_$NAME
 name_spi=$name.SPI.%s.bin
 name_mmc=$name.MMC.hybrid.%s.bin
 
@@ -52,6 +54,22 @@ MMC=1 img_size=16M img_name=firmwares/$name_mmc \
 
 img_size=16M img_name=firmwares/$name_spi \
 	./miZy_spi_image_builder $conf
+
+## force
+cd ../miZy 
+rm ,out/*.sfs
+./initrd.img.pack.sfs xz
+cd $p
+
+conf=miZy_spi_image_builder.conf
+
+MMC=1 img_size=8M img_name=firmwares/$name_mmc \
+	./miZy_spi_image_builder $conf
+
+img_size=8M img_name=firmwares/$name_spi \
+	./miZy_spi_image_builder $conf
+
+exit 0
 
 #find firmwares
 for f in firmwares/*.bin; do
@@ -69,5 +87,5 @@ md5sum *.bin > /tmp/name.md5sum
 
 cd ..
 
-[ "$scp" ] && scp firmwares/*.bin root@zeru:/tmp
+scp firmwares/*.bin root@zeru:/tmp
 
