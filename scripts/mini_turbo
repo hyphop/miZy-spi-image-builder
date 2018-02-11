@@ -32,13 +32,14 @@ conf=miZy_spi_image_builder.conf.fast
 MMC=1 img_size=8M img_name=firmwares/$name_mmc \
 	./miZy_spi_image_builder $conf
 
+img_size=8M img_name=firmwares/$name_spi \
+	./miZy_spi_image_builder $conf
+
 [ "" ] && {
 
 MMC=1 img_size=16M img_name=firmwares/$name_mmc \
 	./miZy_spi_image_builder $conf
 
-img_size=8M img_name=firmwares/$name_spi \
-	./miZy_spi_image_builder $conf
 
 img_size=16M img_name=firmwares/$name_spi \
 	./miZy_spi_image_builder $conf
