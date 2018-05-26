@@ -1,0 +1,70 @@
+#!/bin/sh
+
+## hyphop ##
+
+# generate img
+
+p=`pwd`
+
+#[ "$p" = "./scripts" ] || {
+#	echo "[i] bad working dir )))))"
+#	exit 0
+#}
+
+## usage example
+# cmp=xz usbnet=5 board=r1 ./scripts/gen_music_box
+
+
+name="orange_pi_zero_miZy-video_tv_test-SPI-pre"
+name_spi=$name.SPI.%s.bin
+name_mmc=$name.MMC.hybrid.%s.bin
+d=firmwares/
+
+conf=miZy_spi_image_builder.conf
+
+rm $d/*.bin
+
+cd ../miZy || exit 0
+
+
+##cmp=xz ./initrd.img.pack initrd.img.base.video
+export config=initrd.img.base.video
+
+./initrd.img.pack.dir
+	
+echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
+		
+##
+
+[ "$comp" ] || comp=lzo
+[ "$comp" ] || comp=gzip
+[ "$comp" ] || comp=xz
+
+echo "usbnet: $usbnet"
+
+./initrd.img.pack.sfs $comp
+
+./boot.fel.make-force
+
+cd $p
+
+img_size=16M MMC=1 img_name=$d$name_mmc ./miZy_spi_image_builder
+#img_size=16M       img_name=$d$name_spi ./miZy_spi_image_builder $conf
+
+
+for f in $d/*.bin; do
+
+	n=`basename $f`
+
+	echo "[i] pack gzip > /tmp/$n.gz"
+	gzip -c $f > /tmp/$n.gz
+#	echo "[i] pack xz   > /tmp/$n.xz"
+#	xz -c $f > /tmp/$n.xz
+
+done
+
+cd $d
+
+md5sum *.bin > /tmp/name.md5sum
+
+cd ..

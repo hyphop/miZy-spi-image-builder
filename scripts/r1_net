@@ -17,7 +17,7 @@ cd ../miZy || exit 0
 rm -r ,out/initrd.dir
 
 #cmp=lzo ./initrd.img.pack initrd.img.base.spdif
-export config=initrd.img.base.r1
+export config=initrd.img.base.R1.net
 
 	./initrd.img.pack.dir
 
@@ -27,21 +27,20 @@ export config=initrd.img.base.r1
 
 ##
 
-[ "$comp" ] || comp=lzo
+#[ "$comp" ] || comp=lzo
 [ "$comp" ] || comp=gzip
-[ "$comp" ] || comp=xz
-
-echo "usbnet: $usbnet"
+#[ "$comp" ] || comp=xz
 
 	./initrd.img.pack.sfs $comp
-	
-./boot.fel.make-force
+
+# may be no need
+# ./boot.fel.make-force
 
 cd $p
 
 rm firmwares/*.bin
 
-name=orange_pi_R1_base
+name=orange_pi_R1_net
 name_spi=$name.SPI.%s.bin
 name_mmc=$name.MMC.hybrid.%s.bin
 
@@ -50,7 +49,7 @@ conf=miZy_spi_image_builder.conf.fast
 MMC=1 img_size=16M img_name=firmwares/$name_mmc \
 	./miZy_spi_image_builder $conf
 
-img_size=16M img_name=firmwares/$name_spi \
+      img_size=16M img_name=firmwares/$name_spi \
 	./miZy_spi_image_builder $conf
 
 #find firmwares
@@ -69,5 +68,5 @@ md5sum *.bin > /tmp/name.md5sum
 
 cd ..
 
-[ "$scp" ] && scp firmwares/*.bin root@zeru:/tmp
+#scp firmwares/*.bin mizy@r1:/tmp
 
