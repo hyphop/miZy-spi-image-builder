@@ -3,5 +3,4 @@ bin/*
 out/*
 firmwares/*.bin
 git_*
-syncit*
 docs
