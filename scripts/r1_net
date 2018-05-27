@@ -20,11 +20,8 @@ rm -r ,out/initrd.dir
 export config=initrd.img.base.R1.net
 
 	./initrd.img.pack.dir
-
 ## custom
-
-	echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
-
+#	echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
 ##
 
 #[ "$comp" ] || comp=lzo
