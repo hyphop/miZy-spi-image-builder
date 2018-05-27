@@ -24,6 +24,7 @@ help
 
     ./miZy_spi_image_builder --help
 
+
 common usage for 8M image, output to firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
 
     ./miZy_spi_image_builder
@@ -48,6 +49,10 @@ check build status in shell
 
     ./miZy_spi_image_builder && echo "build ok"
     ./miZy_spi_image_builder || echo "build fail"
+
+=head1 BUILD EXAMPLES
+
+https://github.com/hyphop/miZy-spi-image-builder/tree/master/examples
 
 =head1 write image to SPI from host to working device
 

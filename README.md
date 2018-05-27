@@ -45,6 +45,10 @@ check build status in shell
     ./miZy_spi_image_builder && echo "build ok"
     ./miZy_spi_image_builder || echo "build fail"
 
+# BUILD EXAMPLES
+
+https://github.com/hyphop/miZy-spi-image-builder/tree/master/examples
+
 # write image to SPI from host to working device
 
 easy way for upgrade / rewrite system
