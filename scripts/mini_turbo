@@ -54,8 +54,8 @@ for f in firmwares/*.bin; do
 	
 	echo "[i] pack gzip > /tmp/$n.gz"
 	gzip -c $f > /tmp/$n.gz
-	echo "[i] pack xz   > /tmp/$n.xz"
-	xz -c $f > /tmp/$n.xz
+#	echo "[i] pack xz   > /tmp/$n.xz"
+#	xz -c $f > /tmp/$n.xz
 
 done
 
@@ -64,3 +64,6 @@ cd firmwares
 md5sum *.bin > /tmp/name.md5sum
 
 cd ..
+
+[ "$scp" ] && scp firmwares/*.bin root@zeru:/tmp
+

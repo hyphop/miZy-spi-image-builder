@@ -15,7 +15,7 @@ p=`pwd`
 # cmp=xz usbnet=5 board=r1 ./scripts/gen_music_box
 
 
-name="orange_pi_zero_miZy-video_tv_test-SPI-pre"
+name="orange_pi_zero_miZy-python"
 name_spi=$name.SPI.%s.bin
 name_mmc=$name.MMC.hybrid.%s.bin
 d=firmwares/
@@ -28,11 +28,11 @@ cd ../miZy || exit 0
 
 
 ##cmp=xz ./initrd.img.pack initrd.img.base.video
-export config=initrd.img.base.video
+export config=initrd.img.base.py
 
 ./initrd.img.pack.dir
 	
-echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
+#echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
 		
 ##
 
