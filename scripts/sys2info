@@ -1,5 +1,6 @@
 #!/bin/sh
 
+set -e 
 ## hyphop ##
 
 # generate img
@@ -15,20 +16,23 @@ p=`pwd`
 # cmp=xz usbnet=5 board=r1 ./scripts/gen_music_box
 
 
-name="orange_pi_zero_miZy-python"
+name="orange_pi_zero_miZy-sys2info-id-$vpn"
 name_spi=$name.SPI.%s.bin
 name_mmc=$name.MMC.hybrid.%s.bin
 d=firmwares/
 
-conf=miZy_spi_image_builder.conf.fast2
+conf=miZy_spi_image_builder.conf.fast
 
-rm $d/*.bin
+for f in $d/*.bin; do
+echo "[i] clean $f"
+[ -f "$f" ] && rm $f
+done
 
 cd ../miZy || exit 0
 
 
 ##cmp=xz ./initrd.img.pack initrd.img.base.video
-export config=initrd.img.base.py
+export config=initrd.img.base.sys2info
 
 ./initrd.img.pack.dir
 	
@@ -69,4 +73,4 @@ md5sum *.bin > /tmp/name.md5sum
 
 cd ..
 
-[ "$scp" ] && scp firmwares/*.bin root@zeru:/tmp
+[ "$scp" ] && scp firmwares/*.bin $scp:/tmp

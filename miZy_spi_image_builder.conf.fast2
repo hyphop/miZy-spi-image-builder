@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+## hyphop ##
+
+require "miZy_spi_image_builder.conf";
+
+warn "[i] rewrite \@IMG\n";
+
+our @IMG = (
+    [ uboot  => 0x0080000 => qw{ u-boot-mizi.bin } ],
+    [ script => 0x0010000 => qw{ boot.all.cmd boot.all.env } , $env_spi_file ],
+    [ dtb    => 0x0010000 => qw{ script.bin } ],
+    [ kernel => 0x0000000 => qw{ uImage.lzo } ],
+    [ initrd => 0x0A00000 => qw{ uInitrd.sfs } ],
+#   [ user   => 0x0100000 => qw{ } ]
+    [ user   => 0xFFFFFFF => qw{ overlay.tar.gz } ]
+);

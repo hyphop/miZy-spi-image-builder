@@ -354,6 +354,13 @@ for my $part (@IMG) {
 
     #$part
 
+    my $t;
+    if ( $t = $ENV{"IMG_$part_name"} ) {
+#	warn "[i] add $t => $part_name";
+        push @$part, $t;
+    }
+
+#    warn "[i] FILES @$part";
     my $files = join " " => @$part;
     my $used_size = 0;
 
@@ -362,7 +369,7 @@ for my $part (@IMG) {
         my $filepath = scan_file($file);
 
         unless ( -f $filepath ) {
-            DIE 2 =>  "[e] file \"$filepath\" not found\n";
+            DIE 2 =>  "[e] file \"$file\" not found\n";
         }
 
         $used_size += -s $filepath;
