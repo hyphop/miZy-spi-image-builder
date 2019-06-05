@@ -1,0 +1,5 @@
+#!/bin/sh
+
+## hyphop ##
+
+scp=zeru up=2 hdmi=1 tv=1 wifi=none eth=client scripts/mx3 

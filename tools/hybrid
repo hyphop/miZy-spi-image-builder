@@ -1,0 +1,484 @@
+#!/bin/sh
+
+## hyphop ##
+
+NAME=hybrid
+MMC_OFF=8192
+BS=8192
+
+LOG=/dev/null
+
+PARTS="uboot script dtb kernel initrd user"
+
+about() { echo "\
+$NAME
+
+    read write mmc hybryd parts / like mtd parts
+
+USAGE
+
+    $NAME [IMAGE_FILE] [in|read|write|out|env|list|offset|info] [part_name] [OUT]
+
+    $NAME [IMAGE_FILE] [strip|write|trunk|split] [part_name] [OUT] [OUT..]
+
+    [DEV=] $NAME ...
+
+EXAMPLES
+
+	hybrid list					# display hybryd parts
+	hybrid read dtb | bin2fex > /tmp/script.fex	# read script from disk parse and save 
+	nano /tmp/script.fex		# change script
+	fex2bin /tmp/script.fex | hybrid write dtb	# write changed script back to disk
+	...
+	hybrid read user | tar -tzf-			# read user overlay tar.gz data
+	...
+
+SEE ALSO 
+
+	hybrid_fex_edit
+
+"
+}
+
+
+## hyphop ##
+
+case "$@" in
+    *help*)
+    about && exit
+    ;;
+    *-h*)
+    about && exit
+    ;;
+esac;
+
+[ -f "$1" ] && {
+    IMG="$1"
+    shift
+
+
+[ -s "$IMG" ] || {
+    echo "[e] wrong image file $IMG" >&2
+    exit 1
+}
+
+}
+
+[ "$DEV" ] || DEV="$IMG"
+
+[ "$DEV" ] || {
+    for d in /dev/mmcblk* ; do
+	[ -b "$d" ] && {
+	    echo "[i] try $d">&2
+	    DEV=$d
+	    break
+	}
+    done
+} 
+
+
+[ "$DEV" ] || {
+    echo "[e] image not detected" >&2
+    echo "[i] try: $NAME --help " >&2
+    exit 1
+}
+
+MODE=$1
+PART=$2
+FILE="$3"
+FIL2="$4"
+
+[ "$MODE" ] || {
+	MODE="list"
+#	echo "[i] try $NAME --help" 1>&2
+#	exit 0
+}
+
+
+case "$MODE" in
+    ovl)
+    echo "[i] overlay file list">&2
+    $0 "$DEV" read user 2>/dev/null | tar -tzf- 2>/dev/null
+    ;;
+    ovlcnf)
+    echo "[i] overlay file configs">&2
+    TAR_INC="/tmp/$(basename $0).include"
+    echo "*.conf" > $TAR_INC
+    $0 "$DEV" read user 2>/dev/null | tar --wildcards -T $TAR_INC -xzOf-
+    ;;
+esac
+
+
+bb=
+
+grep 2>&1 | grep BusyBox >/dev/null && bb=1
+
+#echo "[i] $MODE '$PART' IMAGE: $DEV" >&2
+
+SIZE=0
+
+parseparts(){
+	v="$1"
+	case "$v" in
+	mmcparts=*)
+#	echo "[i] parse_parts $v">&2
+		parts=${v#mmcparts=}
+#	    echo "parts $parts" >&2
+	    eval $parts
+		for p in $PARTS ; do
+			eval v=\$$p
+			eval ${p}_offset=$SIZE
+#			echo "[i] $p=$v" >&2
+			SIZE=$((SIZE+v))
+		done
+
+	break
+	;;
+	esac
+
+	SIZE_MMC=$((MMC_OFF+SIZE))
+}
+
+
+
+ENV=""
+#script_offset=$((0x0080000)) # uboot size
+
+
+###
+### work only +8192 format image
+###############################
+
+MMC_OFF=0
+MMC_OFF=8192
+
+MLABEL=miZy_spi_image_builder
+
+dd bs=512 count=1 if="$DEV" 2>/dev/null | \
+    grep -q "$MLABEL" > /dev/null || {
+#   MMC_OFF=8192
+	echo "[e] its not hybrid image generate by $MLABEL">&2
+	exit 1
+    }
+
+
+script_offset=$(dd bs=64 count=1 skip=3 if="$DEV" 2>/dev/null)
+script_offset=$((script_offset*1))
+[ "$script_offset" -gt 666 -a "$script_offset" -lt 666666 ] || {
+    script_offset=
+}
+
+[ "$script_offset" ] || \
+script_offset=$((0x0080000)) # uboot size
+
+echo "[i] script_offset $script_offset">&2
+
+
+egrep="egrep"
+
+[ "$bb" ] || {
+    egrep="egrep --binary-files=text"
+}
+
+ENV(){
+		bs=4096
+		echo "[i] $MMC_OFF + $script_offset + $bs <= $DEV" >&2
+		skip=$((MMC_OFF+script_offset+bs))
+		cmd="dd if=$DEV bs=$bs skip=$((skip/$bs)) count=1"
+		echo "[i] $cmd" 1>&2
+#		$cmd 2>/dev/null
+		m=`$cmd 2>/dev/null| $egrep mmcparts=uboot=`
+		[ "$m" ] || {
+		m=`$cmd 2>/dev/null| $egrep mtd=mtdparts= | tail -1`
+		    echo "[i] $m" >&2
+		    i=0
+	    	    for l in `echo "$m" | egrep -o '\d+k'`; do
+			s="${l%k}"
+			S=$((s*1024));
+#			echo $S
+			case "$i" in
+			    0)
+			    n=uboot
+			    ;;
+			    1)
+			    n=script
+			    ;;
+			    2)
+			    n=dtb
+			    ;;
+			    3)
+			    n=kernel
+			    ;;
+			    4)
+			    n=initrd
+			    ;;
+			    5)
+			    n=user
+			    ;;
+			esac
+			#echo "$i $n $S $SIZE" >&2
+			eval ${n}=$S
+			eval ${n}_offset=$SIZE
+			SIZE=$((SIZE+S))
+			i=$((i+1))
+		    done
+		    #echo "ko: $kernel_offset"
+		sizes=`$cmd 2>/dev/null| $egrep \^\(kernel_size\|ramdisk_size\)=`
+#	echo $sizes >&2;
+		eval "$sizes"
+#		    exit 0
+		    return
+		}
+		[ "$m" ] && {
+		echo "[i] $m" >&2
+		parseparts "$m"
+		sizes=`$cmd 2>/dev/null| $egrep \^\(kernel_size\|ramdisk_size\)=`
+#	echo $sizes >&2;
+		eval "$sizes"
+		}
+
+}
+
+ENV
+
+SIZE_MMC=$((MMC_OFF+SIZE))
+
+echo "[i] MMC_OFF: $MMC_OFF MMC_IMAGE_SIZE: $SIZE_MMC IMAGE_SIZE: $SIZE" >&2
+echo "[i] kernel_size: $kernel_size  ramdisk_size: $ramdisk_size" >&2
+
+case $MODE in
+
+	env)
+		echo "$ENV"
+		exit
+	;;
+	list|info)
+	
+	[ "$MODE" = "info" ] && INFO=1
+
+	echo "[i] size $SIZE + $MMC_OFF = $SIZE_MMC" 1>&2
+
+	printf "%10s %10s %10s %10s \n" part size offset blocks 1>&2
+	printf "%10s %10s %10s %10s \n" ---- ---- ------ ------ 1>&2
+	inf=""
+	for p in $PARTS ; do
+		eval v=\$$p
+		eval o=\$${p}_offset
+		o=$((o+$MMC_OFF))
+		b=$((o/$BS))
+		cb=$((v/$BS))
+		printf "%10s %10s %10s %10s\n" $p $v $o $b
+		[ "$INFO" ] && inf="$inf[i] $p \"dd if=$DEV bs=$BS skip=$b count=$cb\"
+"
+		
+	done
+	echo "$inf" >&2
+	;;
+	extract)
+
+
+	EXTRACTED="$IMG.ext"
+
+	[ -d "$EXTRACTED" ] || mkdir -p "$EXTRACTED"
+	ln -sf $EXTRACTED extracted
+
+	n=0
+
+	[ "$MMC_OFF" -gt 0 ] && {
+	    echo "[i] extract mmc header">&2
+	    cmd="dd if=$DEV of="$EXTRACTED/$n-header_mmc" bs=$BS count=1"
+	    echo "$cmd"
+	    $cmd 2>$LOG
+	}
+
+
+	for p in $PARTS ; do
+
+			n=$((n+1))
+			eval v=\$$p
+			eval o=\$${p}_offset
+			echo "[i] extract part $p $v $o" 1>&2
+			skip=$((MMC_OFF+o))
+			cmd="dd if=$DEV of="$EXTRACTED/$n-$p" bs=$BS skip=$((skip/$BS)) count=$((v/$BS))"
+			echo $cmd
+			$cmd 2>$LOG
+			#exit 0
+	done
+
+	;;
+
+	out|md5|read)
+	for p in $PARTS ; do
+		[ "$p" = "$PART" ] && {
+			eval v=\$$p
+			eval o=\$${p}_offset
+			echo "[i] read part $p $v $o" 1>&2
+			skip=$((MMC_OFF+o))
+			cmd="dd if=$DEV bs=$BS skip=$((skip/$BS)) count=$((v/$BS))"
+			#echo "$cmd > $FILE" 1>&2
+#			[ "$MODE"  = "md5" ] && {
+#				md5s=`$cmd 2>/dev/null | md5sum`
+#				echo ${md5s% -}
+#				exit 0
+#			}
+			case $FILE in
+			""|-)
+			echo "$cmd > STDOUT" 1>&2
+			exec $cmd
+			;;
+			*)
+			echo "$cmd > FILE" 1>&2
+			exec $cmd of=$FILE
+			;;
+			esac
+			exit 0
+		}
+	done
+	echo "[e] undef part $PART" 1>&2
+	exit 1
+	;;
+
+	trunk)
+
+	for p in $PARTS ; do
+
+			eval v=\$$p
+			eval o=\$${p}_offset
+			o2=$(($o+$MMC_OFF))
+
+		[ "$p" = "$PART" ] && {
+			echo "[i] trunk by part $PART">&2
+			echo "[i] offset part $p $v $o+$MMC_OFF" 1>&2
+
+			cmd="dd if=$DEV bs=$BS count=$(($o2/$BS))"
+			echo "[i] $cmd" 1>&2
+
+			case $FILE in
+			""|-)
+			echo "$cmd > STDOUT" 1>&2
+			exec $cmd
+			;;
+			*)
+			echo "$cmd > FILE: $FILE" 1>&2
+			exec $cmd of=$FILE
+			;;
+			esac
+
+			exit 0
+		}
+	done
+
+	FILE="$2"
+
+			o2=$(($o+$MMC_OFF+$v))
+			echo "[i] trunk after last $o2">&2
+
+			cmd="dd if=$DEV bs=$BS count=$(($o2/$BS))"
+
+			case $FILE in
+			""|-)
+			echo "$cmd > STDOUT" 1>&2
+			exec $cmd
+			;;
+			*)
+			echo "$cmd > FILE: $FILE" 1>&2
+			exec $cmd of=$FILE
+			;;
+			esac
+
+		    
+	exit 0
+	;;
+	split)
+	for p in $PARTS ; do
+		[ "$p" = "$PART" ] && {
+	
+			eval v=\$$p
+			eval o=\$${p}_offset
+			o2=$(($o+$MMC_OFF))
+			echo "[i] offset part $p $v $o+$MMC_OFF" 1>&2
+			cmd="dd if=$DEV bs=$BS count=$(($o2/$BS))"
+			echo "[i] $cmd" 1>&2
+
+			case $FILE in
+			-)
+			echo "$cmd > STDOUT" 1>&2
+			$cmd
+			;;
+			*)
+			[ "$FILE" ] || FILE=$PART.head.img
+			echo "$cmd > $FILE" 1>&2
+			$cmd of=$FILE
+			;;
+			esac
+
+			seek=$((MMC_OFF+o))
+			cmd="dd if=$DEV bs=$BS skip=$((seek/$BS)) count=$((v/$BS))"
+
+			echo "[i] $cmd" 1>&2
+			case $FIL2 in
+			-)
+			echo "$cmd > STDOUT" 1>&2
+			$cmd
+			;;
+			*)
+			[ "$FIL2" ] || FIL2=$PART.tail.img
+			echo "$cmd > $FIL2" 1>&2
+			$cmd of=$FIL2
+			;;
+			esac
+
+
+			exit 0
+		}
+	done
+	exit 0
+	;;
+	offset)
+	for p in $PARTS ; do
+		[ "$p" = "$PART" ] && {
+			eval v=\$$p
+			eval o=\$${p}_offset
+			echo "[i] offset part $p $v $o+$MMC_OFF" 1>&2
+			seek=$((MMC_OFF+o))
+			cmd="dd if=$DEV bs=$BS skip=$((seek/$BS)) count=$((v/$BS))"
+			echo "[i] $cmd" 1>&2
+			echo $((o+$MMC_OFF))
+		}
+	done
+	exit 0
+	;;
+	in|write)
+	for p in $PARTS ; do
+		[ "$p" = "$PART" ] && {
+			eval v=\$$p
+			eval o=\$${p}_offset
+			echo "[i] write part $p $v $o" 1>&2
+			seek=$((MMC_OFF+o))
+			cmd="dd of=$DEV bs=$BS seek=$((seek/$BS)) conv=notrunc count=$((v/$BS))"
+			#echo "$cmd > $FILE" 1>&2
+#			[ "$MODE"  = "md5" ] && {
+#				md5s=`$cmd 2>/dev/null | md5sum`
+#				echo ${md5s% -}
+#				exit 0
+#			}
+			case $FILE in
+			""|-)
+			echo "$cmd < STDOUT" 1>&2
+			exec $cmd
+			#sync
+			;;
+			*)
+			echo "$cmd < FILE" 1>&2
+			exec $cmd if=$FILE
+			#sync
+			;;
+			esac
+			exit 0
+		}
+	done
+	echo "[e] undef part $PART" 1>&2
+	exit 1
+	;;
+
+esac

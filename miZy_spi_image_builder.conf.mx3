@@ -1,0 +1,90 @@
+#!/usr/bin/perl
+
+## hyphop ##
+
+## config for miZy_spi_image_builder
+## yes its a pure perl code )
+
+    # try get it from ENV
+our $img_name = $ENV{img_name};
+    # any output image name, where %s replaced by $img_size
+    $img_name ||= "firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-%s%s.bin";
+    # plz not change
+our $block_size = 65536;
+    # plz not change
+our $script_padded_size = 4096;
+    # try get it from ENV
+our $img_size = $ENV{img_size};
+    # by default 8M
+    $img_size //= '8M';
+    # try get it from ENV
+our @SCAN_PATH = split /\s+/ => $ENV{SCAN_PATH};
+    # by default scan files in: . and ./bin
+    @SCAN_PATH = qw{ 
+    .
+    bin
+    bin.local
+    } unless @SCAN_PATH;
+
+our $env_spi_file = "boot.spi.env";
+
+#write mmc image or not // 0 - no - by default
+our $mmc_image  = $ENV{MMC};
+    $mmc_image//= 0;
+
+#write spi image or not // 1 - yes - by default
+our $spi_image  = $mmc_image ? 0 : $ENV{SPI};
+    $spi_image//= 1;
+
+our $MMC_OFFSET = 8192;
+our $MMC_BS	= 512;
+
+#mtd partname=> part_size => @files
+
+our @IMG = (
+#    [ uboot  => 0x0090000 => qw{ u-boot-mizi.bin } ],
+    [ uboot  => 0x0080000 => qw{ u-boot-mizi.bin } ],
+    [ script => 0x0010000 => qw{ boot.all.cmd boot.all.env } , $env_spi_file ],
+    [ dtb    => 0x0010000 => qw{ script.bin } ],
+    [ kernel => 0x0000000 => qw{ uImage.lzma } ],
+#     [ kernel => 0x0000000 => qw{ uImage.gzip } ],
+#    [ kernel => 0x0300000 => qw{ uImage.lzma } ],
+#    [ kernel => 0x0500000 => qw{ uImage.lzo } ],
+#    [ initrd => 0x0700000 => qw{ uInitrd.sfs } ],
+#    [ initrd => 0x0460000 => qw{ uInitrd.sfs } ],
+    [ initrd => 0x0000000 => qw{ uInitrd.sfs } ],
+#   [ user   => 0x0100000 => qw{ } ]
+    [ user   => 0xFFFFFFF => qw{ } ]
+);
+
+# not change this if u dont know what is it ))))
+our $env_spi_generate = $ENV{env_spi_generate} // 1;
+
+our %mtd_name_uboot_read_size = (
+    kernel => [ kernel_size  =>	1 ],
+    initrd => [ ramdisk_size => 1 ],
+    dtb	   => [ fdt_size     =>	0 ],
+);
+
+our %mtd_name_uboot_read_offset = (
+    kernel => kernel_offset,
+    initrd => ramdisk_offset,
+    dtb	   => fdt_offset,
+);
+
+our %mmc_name_uboot_read_size = (
+    kernel => [ kernel_sb  => 1 ],
+    initrd => [ ramdisk_sb => 1 ],
+    dtb	   => [ fdt_sb     => 0 ],
+#    user   => [ user_sb    => 0 ],
+);
+
+our %mmc_name_uboot_read_offset = (
+    kernel => kernel_ob,
+    initrd => ramdisk_ob,
+    dtb	   => fdt_ob,
+#    user   => user_ob,
+);
+
+
+our $env_spi_mtd_parts= "mtd=mtdparts=W25q128-flash.0:";

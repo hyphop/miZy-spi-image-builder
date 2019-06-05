@@ -16,7 +16,7 @@ p=`pwd`
 # cmp=xz usbnet=5 board=r1 ./scripts/gen_music_box
 
 
-name="orange_pi_zero_miZy-sys2info-id-$vpn"
+name="orange_pi_zero_miZy-i2s-rec"
 name_spi=$name.SPI.%s.bin
 name_mmc=$name.MMC.hybrid.%s.bin
 d=firmwares/
@@ -32,15 +32,25 @@ cd ../miZy || exit 0
 
 
 ##cmp=xz ./initrd.img.pack initrd.img.base.video
-export config=initrd.img.base.sys2info
+export config=initrd.img.base.grab
 
 ./initrd.img.pack.dir
 	
-#echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
-		
+echo "BUILD: $(date)" >> ,out/initrd.dir/etc/banner.mod
+
+shadow_file=initrd.dir-77-uni/etc/shadow \
+    ./tools/passw_replace root:jopa > \
+    ,out/initrd.dir/etc/shadow
+
+chmod 0600 \
+    ,out/initrd.dir/etc/shadow
+
+cat ~/.ssh/id_rsa.pub >> \
+    ,out/initrd.dir/etc/dropbear/authorized_keys
 ##
 
-[ "$comp" ] || comp=lzo
+
+#[ "$comp" ] || comp=lzo
 [ "$comp" ] || comp=gzip
 [ "$comp" ] || comp=xz
 
@@ -53,22 +63,8 @@ echo "usbnet: $usbnet"
 cd $p
 
 img_size=16M MMC=1 img_name=$d$name_mmc ./miZy_spi_image_builder $conf
-
-# NO NEED SPI
-
 #img_size=16M       img_name=$d$name_spi ./miZy_spi_image_builder $conf
 
-
-for f in $d/*.bin; do
-
-	n=`basename $f`
-
-	echo "[i] pack gzip > /tmp/$n.gz"
-	gzip -c $f > /tmp/$n.gz
-#	echo "[i] pack xz   > /tmp/$n.xz"
-#	xz -c $f > /tmp/$n.xz
-
-done
 
 cd $d
 
@@ -76,15 +72,23 @@ md5sum *.bin > /tmp/name.md5sum
 
 cd ..
 
+
 #[ "$P" ] || P=22
 [ "$P" ] && P="-P $P"
 
 [ "$scp" ] && {
 echo "scp $P firmwares/*.bin $scp:/tmp"
-scp $P firmwares/*.bin $scp:/tmp
+scp $P firmwares/*.bin $scp:/tmp || {
+    echo "[e] fail ssh scp">&2
+    exit 1
+}
 }
 
-cp firmwares/*.bin ../sys2info/firmwares
-cp firmwares/*.bin /home/sys2info.test/firmwares
-#rm ../sys2info/firmwares/*.offset
-rm /home/sys2info.test/firmwares/*.offset
+[ "$up" ] && {
+ping -c1 $scp &&
+    ssh $scp /opt/image_write_sd yes && {
+    [ "$up" = "2" ] && {
+	ssh $scp reboot
+    }
+    }
+}

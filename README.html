@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<title>
+ABOUT miZy\_spi\_image\_builder
+</title>
+    </head>
+
+<style>
+
+html, body {
+    padding: 0px;
+    margin: 0px;
+    margin-left: auto;
+    margin-right: auto;
+    width: auto;
+    max-width: 1024px;
+    min-width: 320px;
+    height:100%;
+    font-family: arial;
+    font-size: 24px;
+    color: #000000;
+    background: #666666;
+}
+
+table {
+    font-family: arial;
+    font-size: 16px;
+    color: #000000;
+}
+
+pro {
+    font-family: arial;
+    font-size: 16px;
+    color: #000000;
+}
+
+label{
+    font-family: arial;
+    font-size: 18px;
+    border: 0px solid red;
+    display: inline-block;
+    width: 100%;
+}
+
+h1,h2,h3 {
+    font-size: 120%;
+    color: #666666;
+
+}
+
+p {
+    padding-bottom: 10px;
+}
+
+h2 {
+    font-size: 150%;
+}
+
+h1 {
+    font-size: 200%;
+}
+
+.main img {
+    padding: 20px;
+}
+
+a{
+    color: #4186be;
+
+    text-decoration: none;
+}
+
+a:hover {
+    color: #E86402;
+;
+}
+
+h2 b{
+    color: #E86402;
+}
+
+.date{
+	background: #eee;
+	display: block;
+	padding: 10px;
+	width: 100px;
+	float: left;
+	margin-right: 20px;
+	color: #aaa;
+	font-size: 100%;
+	text-align: center;
+}
+
+
+.pro{
+	font-size: 120%;
+}
+
+.main{
+    border: solid 1px #fff;
+    background: #fff;
+    margin: 0px;
+    padding: 0px;
+    padding-top: 20px;
+    padding-left: 40px;
+    padding-right: 40px;
+    height:auto !important; /* real browsers */
+    height:100%; /* IE6: treaded as min-height*/
+    min-height:100%; /* real browsers */
+}
+
+    .cmd {
+	padding-left: 10px;
+        list-style: none;
+	font-family: monospace;
+	font-size: 80%;
+    }
+
+    .cmd li{
+
+    }
+
+    .cmd li:before {
+	content: "# ";
+	color: #aaffff;
+    }
+
+    pre {
+
+    padding: 0px;
+    white-space: pre;
+    margin: 0px;
+	font-size: 85%;
+    }
+
+    code {
+	display: block;
+	padding-left: 10px;
+	font-family: monospace;
+	white-space: pre-line;
+	border-left: solid #bebebe 4px;
+	color: #666666;
+    }
+    .bottom {
+	display: block;
+	border-top: solid #bebebe 1px;
+	color: #666666;
+	padding: 20px;
+    }
+
+</style>
+
+<body>
+<div class="main">
+<h1>ABOUT miZy_spi_image_builder</h1>
+
+<p>SPI-flash miZy firmware image builder (for sunxi Orange Pi Zero, another sunxi boards maybe work too )
+also Hybrid-image generate for SD card (spi emulate on sd card)</p>
+
+<p>Its just a part or miZy project, and same as other our parts can standalone used</p>
+
+<p>This perl script no need any libs or another deps</p>
+
+<h1>Get Source</h1>
+
+<pre><code>mkdir /tmp/zero_builder
+cd /tmp/zero_builder
+git clone [https://github.com/hyphop/miZy-spi-image-builder.git](https://github.com/hyphop/miZy-spi-image-builder.git)
+cd miZy-spi-image-builder
+</code></pre>
+
+<h1>USAGE</h1>
+
+<p>help</p>
+
+<pre><code>./miZy_spi_image_builder --help
+</code></pre>
+
+<p>common usage for 8M image, output to firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin</p>
+
+<pre><code>./miZy_spi_image_builder
+</code></pre>
+
+<p>custom config</p>
+
+<pre><code>./miZy_spi_image_builder miZy-spi_image_builder_custom.conf
+</code></pre>
+
+<p>set 16M image size</p>
+
+<pre><code>img_size=16M ./miZy_spi_image_builder
+</code></pre>
+
+<p>not padded by flash size, save only used space</p>
+
+<pre><code>img_size=0 ./miZy_spi_image_builder
+</code></pre>
+
+<p>override image out name</p>
+
+<pre><code>img_name=out/my_image_name%s.bin ./miZy_spi_image_builder
+</code></pre>
+
+<p>check build status in shell </p>
+
+<pre><code>./miZy_spi_image_builder &amp;&amp; echo "build ok"
+./miZy_spi_image_builder || echo "build fail"
+</code></pre>
+
+<h1>BUILD EXAMPLES</h1>
+
+<p><a href="https://github.com/hyphop/miZy-spi-image-builder/tree/master/examples">https://github.com/hyphop/miZy-spi-image-builder/tree/master/examples</a></p>
+
+<h1>write image to SPI from host to working device</h1>
+
+<p>easy way for upgrade / rewrite system</p>
+
+<pre><code>scp firmwares/*.bin root@zeru:/tmp
+dd bs=65536 of=/dev/mtdblock5 &lt; /tmp/*.bin
+
+163+1 records in
+163+1 records out
+10743872 bytes (10.2MB) copied, 61.941887 seconds, 169.4KB/s
+</code></pre>
+
+<h1>Hybrid image</h1>
+
+<p>by default miZy_spi_image_builder generate hybrid image its simple raw image,
+which can used for SPI and same for SD/MMC. this image equal spi-flash rom and
+ready for direct write to SPI flash, but we can write this image to SD/MMC
+for test work on device, and next copy this image to SPI from booted SD/MMC, </p>
+
+<p>write hybrid image to SD/MMC</p>
+
+<pre><code>dd seek=16 bs=512 of=/dev/mmcblk0 &lt; firmwares/mizy_spi_flash_demo-8M.bin
+</code></pre>
+
+<p>write hybrid image direct to SPI ( /dev/mtdblock5 - full size spi-flash mtd block dev)</p>
+
+<pre><code>dd bs=65536 of=/dev/mtdblock5 &lt; /tmp/mizy_spi_flash_demo-8M.bin
+</code></pre>
+
+<p>write hybrid image direct to SPI via mtd</p>
+
+<pre><code>mtd write /tmp/mizy_spi_flash_demo-8M.bin full
+</code></pre>
+
+<p>write hybrid image to SPI via sunxi-tooll FEL mode from host machine</p>
+
+<pre><code>sunxi-fel -p spiflash-write 0 firmwares/mizy_spi_flash_demo-8M.bin
+</code></pre>
+
+<h1>generate MMC image</h1>
+
+<p>output raw mmc image (this image usable for mmc, not for SPI )</p>
+
+<pre><code>MMC=1 img_name=firmwares/mizy_mmc_image.bin ./miZy_spi_image_builder 
+</code></pre>
+
+<p>add one partiotion and write some readme info there</p>
+
+<pre><code>./miZy_mmc_add_partitions firmwares/mizy_mmc_image.bin 8x8
+</code></pre>
+
+<h2><a name='write_mmc_image_to_sd_mmc'></a>write mmc image to SD/MMC</h2>
+
+<pre><code>dd of=/dev/mmcblk0 &lt; firmwares/mizy_mmc_image.bin
+</code></pre>
+
+<h1>copy from booted MMC image to SPI, directly from working device</h1>
+
+<pre><code>mmc_copy_to_spi
+mmc_copy_to_spi yes
+
+## &lt;a name='found_mizy_hybrid_image_info'&gt;&lt;/a&gt;FOUND mizy hybrid image info:
+8388608                                                        
+mizy_mmc_image.bin                                             
+miZy_spi_image_builder Thu Apr  6 16:17:17 2017 ## &lt;a name='hyphop'&gt;&lt;/a&gt;hyphop ##   
+
+## &lt;a name='write_image_cmd'&gt;&lt;/a&gt;WRITE IMAGE CMD:
+&gt; dd if=/dev/mmcblk0 skip=1 bs=8192 count=1024 of=/dev/mtdblock5
+1024+0 records in
+1024+0 records out
+8388608 bytes (8.0MB) copied, 45.987770 seconds, 178.1KB/s
+</code></pre>
+
+<p>ok system is ready for full loading from spi
+now u can remove sd card, and reboot system from spi already!</p>
+
+<h1>CONFIG FILE</h1>
+
+<p>default config</p>
+
+<pre><code>miZy-spi_image_builder.conf
+</code></pre>
+
+<p>config file its a same pure perl code!</p>
+
+<h1>PATHS</h1>
+
+<p>put your files (uboot scripts env fex/dtc kernel squashfs initramfs userdata) in @SCAN_PATH dirs
+by default are</p>
+
+<pre><code>.
+./bin
+./bin.local
+</code></pre>
+
+<h1>TOOLS</h1>
+
+<h1>miZy</h1>
+
+<p>tiny fast embedded linux, for sunxi Orange Pi Zero (and maybe other boards) and mods.
+Now under active development, but is usable already )</p>
+
+<h1>write image to device in FEL mode</h1>
+
+<p>in FEL mode via sunxi-fel tools</p>
+
+<p>check spi flash size</p>
+
+<pre><code>./tools/fel_spi_info
+Manufacturer: Winbond (EFh), model: 40h, size: 16777216 bytes.
+</code></pre>
+
+<p>ok! write image - u can write any image size &lt;= flash size</p>
+
+<pre><code>./tools/fel_spi_write firmwares/orange_pi_zero_hyphop_mizy_spi_flash_demo-8M.bin
+</code></pre>
+
+<h1>LINKS</h1>
+
+<ul>
+<li><a href="https://github.com/hyphop/miZy-spi-image-builder">https://github.com/hyphop/miZy-spi-image-builder</a></li>
+<li><a href="https://hyphop.github.io/mizy/">https://hyphop.github.io/mizy/</a></li>
+<li><a href="https://github.com/hyphop/miZy-uboot">https://github.com/hyphop/miZy-uboot</a></li>
+<li><a href="https://github.com/hyphop/miZy-linux-kernel">https://github.com/hyphop/miZy-linux-kernel</a></li>
+</ul>
+
+<script>
+ss=document.getElementById("stopspam");
+ss.innerHTML=ss.innerHTML.replace(/\(at\)/, '@').replace(/\(dot\)/, '.');
+</script>
+
+    <div class="bottom">
+    
+    </div>
+
+<div>
+</body>
+</html>

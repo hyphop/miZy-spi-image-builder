@@ -1,0 +1,115 @@
+#!/bin/sh
+
+set -e 
+## hyphop ##
+
+# generate img
+
+p=`pwd`
+
+
+name="nanopi-air-miZy-test"
+name_spi=$name.SPI.%s.bin
+name_mmc=$name.MMC.hybrid.%s.bin
+d=firmwares/
+
+conf=miZy_spi_image_builder.conf.fast
+
+for f in $d/*.bin; do
+echo "[i] clean $f"
+[ -f "$f" ] && rm $f
+done
+
+cd ../miZy || exit 0
+
+
+##cmp=xz ./initrd.img.pack initrd.img.base.video
+export config=initrd.img.base.nanopi-air
+
+./initrd.img.pack.dir
+
+SYS=,out/initrd.dir	
+
+#echo "BUILD: $(date)" >> $SYS/etc/banner.mod
+
+#shadow_file=initrd.dir-77-uni/etc/shadow \
+#    ./tools/passw_replace root:jopa > \
+#    $SYS/etc/shadow
+
+#echo DHCP=1 >> $SYS/etc/eth.conf
+
+chmod 0600 \
+    $SYS/etc/shadow
+
+#cat ~/.ssh/id_rsa.pub >> \
+#    $SYS/etc/dropbear/authorized_keys
+##
+
+
+#[ "$comp" ] || comp=lzo
+[ "$comp" ] || comp=gzip
+[ "$comp" ] || comp=xz
+
+echo "usbnet: $usbnet"
+
+./initrd.img.pack.sfs $comp
+
+./boot.fel.make-force
+
+cd $p
+
+img_size=16M MMC=1 img_name=$d$name_mmc ./miZy_spi_image_builder $conf
+#img_size=16M       img_name=$d$name_spi ./miZy_spi_image_builder $conf
+
+
+cd $d
+
+md5sum *.bin > /tmp/name.md5sum
+
+cd ..
+
+[ "$mmc" ] && {
+    mmc=/dev/mmcblk0
+
+    [ -b "$mmc" ] || {
+	echo "[i] $mmc not block dev">&2
+    }
+    
+    for img in firmwares/*MMC*bin; do
+	echo "[i] write $img > $mmc">&2
+    dd of=$mmc < $img
+    done
+    sync
+    exit 0
+}
+
+#[ "$P" ] || P=22
+p=
+[ "$P" ] && P="-P $P"
+[ "$P" ] && p="-p $P"
+
+[ "$scp" ] && {
+
+    mizy_up
+    sleep 1
+
+echo "scp $P firmwares/*.bin $scp:/tmp"
+scp $P firmwares/*.bin $scp:/tmp || {
+    echo "[e] fail ssh scp">&2
+    exit 1
+}
+}
+
+[ "$up" ] && {
+ping -c1 $scp && {
+    cmd="ssh root@$scp $p /opt/image_write_sd yes"
+    echo "# $cmd">&2
+    $cmd && {
+	    [ "$up" = "2" ] && {
+	        cmd="ssh root@$scp $p reboot"
+	        echo "# $cmd">&2
+		$cmd
+	    }
+	}
+    }
+}

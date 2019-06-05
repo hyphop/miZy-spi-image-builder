@@ -13,5 +13,5 @@ our @IMG = (
     [ kernel => 0x0000000 => qw{ uImage.lzo } ],
     [ initrd => 0x0A00000 => qw{ uInitrd.sfs } ],
 #   [ user   => 0x0100000 => qw{ } ]
-    [ user   => 0xFFFFFFF => qw{ overlay.tar.gz } ]
+    [ user   => 0xFFFFFFF => qw{ } ]
 );
