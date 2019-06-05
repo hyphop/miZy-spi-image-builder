@@ -21,6 +21,8 @@ USAGE
 
     $NAME [IMAGE_FILE] [strip|write|trunk|split] [part_name] [OUT] [OUT..]
 
+    $NAME [IMAGE_FILE] extract
+
     [DEV=] $NAME ...
 
 EXAMPLES
@@ -154,16 +156,20 @@ MMC_OFF=8192
 
 MLABEL=miZy_spi_image_builder
 
-dd bs=512 count=1 if="$DEV" 2>/dev/null | \
+dd bs=512 skip=1 count=1 if="$DEV" 2>/dev/null | \
     grep -q "$MLABEL" > /dev/null || {
 #   MMC_OFF=8192
 	echo "[e] its not hybrid image generate by $MLABEL">&2
 	exit 1
     }
 
+#
+# 64*8=512
+#
 
-script_offset=$(dd bs=64 count=1 skip=3 if="$DEV" 2>/dev/null)
+script_offset=$(dd bs=64 count=1 skip=11 if="$DEV" 2>/dev/null)
 script_offset=$((script_offset*1))
+
 [ "$script_offset" -gt 666 -a "$script_offset" -lt 666666 ] || {
     script_offset=
 }
